@@ -95,7 +95,9 @@ BibOptions(
   cite.style    = "authoryear",
   style         = "markdown",
   hyperlink     = FALSE,
-  dashed        = FALSE
+  dashed        = FALSE,
+  max.names =3,
+  longnamesfirst = FALSE
 )
 bib <- ReadBib("literature.bib", check = FALSE)
 
@@ -103,7 +105,14 @@ bib <- ReadBib("literature.bib", check = FALSE)
 
 
 ```{r setup-2, echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE}
+zulassung_dtlnd_lwk <- matrix(
+c(2022, 253894,	21633,		18322,	30,	  77,	  2245,	0,
+2023,	  290693,	25330,		21790,	126,	31,	  2591,	1,
+2024, 	316928,	20524,		17007,	100,	277,	2344,	1,
+2025, 	295595,	36366,		27275,	107,	6191,	1669,	2)
+, nrow= 4, byrow=T)
 
+colnames(zulassung_dtlnd_lwk) <- c("Jahr", "gesamt", "alternativ", "BEV","FC", "PHEV", "LNG", "H2") 
 
 ```
 
@@ -131,24 +140,185 @@ class: inverse, center, middle
 
 ---
 
-## Motivation
+## Emissionssensitivität Beispiel
+
+```{r motivation-rewe, echo=FALSE, message=FALSE, warning=FALSE, out.width="90%"}
+knitr::include_graphics("fig/rewe.png")
+```
+
+---
+## Emissionssensitivität allgemein
+
+.col-50[
+```{r motivation-c02sense, echo=FALSE, message=FALSE, warning=FALSE, out.width="99%"}
+knitr::include_graphics("fig/transporeon_2024_CO2sensitive.png")
+```
+
+`r Cite(bib, "transporeon2024", .opts = list(cite.style = "authoryear"))` 
+]
+--
+.col-50[
+```{r motivation-wtp, echo=FALSE, message=FALSE, warning=FALSE, out.width="90%"}
+knitr::include_graphics("fig/transporeon_2022_Wtp.png")
+```
+`r Cite(bib, "bcg2023", .opts = list(cite.style = "authoryear", max.names = 3, longnamesfirst = FALSE))` 
+]
+
+---
+## Emission awareness
+
+.col-50[
+```{r motivation-accountin, echo=FALSE, message=FALSE, warning=FALSE, out.width="99%"}
+knitr::include_graphics("fig/transporeon_2022_emis_account.png")
+```
+
+`r Cite(bib, "transporeon2022", .opts = list(cite.style = "authoryear"))` 
+]
+--
+.col-50[
+```{r motivation-technologies, echo=FALSE, message=FALSE, warning=FALSE, out.width="99%"}
+knitr::include_graphics("fig/transporeon_2024_technologies.png")
+```
+`r Cite(bib, "transporeon2024", .opts = list(cite.style = "authoryear"))` 
+]
+
 
 ---
 
-## Motivation - 2
+## Motivation - Zulassungen von zero-emission vehicles (ZEV)
 
+```{r motivation-zev, echo=FALSE, message=FALSE, warning=FALSE, out.width="90%"}
+knitr::include_graphics("fig/sales_shares_zev.png")
+```
+
+`r Cite(bib, "Mulholland2026", .opts = list(cite.style = "authoryear"))` 
+
+---
+
+## Motivation - Zulassung von ZEV-LKW in Deutschland
+
+.col-50[
+```{r zulassung-zev-lwk, echo=FALSE, message=FALSE, warning=FALSE}
+p <- as.data.frame(zulassung_dtlnd_lwk) |>
+  dplyr::select(Jahr, BEV, FC, PHEV, LNG, H2) |>
+  tidyr::pivot_longer(-Jahr, names_to = "Technologie", values_to = "Anzahl") |>
+  dplyr::mutate(
+    Jahr = factor(Jahr),
+    Technologie = factor(Technologie, levels = c("H2", "LNG", "PHEV", "FC", "BEV"))
+  ) |>
+  ggplot(aes(x = Jahr, y = Anzahl, fill = Technologie)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c(
+    BEV  = "#5E3EE1",   # HSRM Violett (Sekundaerfarbe)
+    FC   = "#9B7FEE",   # Helles Violett (abgeleitet)
+    PHEV = "#E00514",   # HSRM Rot (Akzentfarbe)
+    LNG  = "#361E47",   # HSRM Dunkelviolett (Primaerfarbe)
+    H2   = "#F08080"    # Helles Rot (abgeleitet)
+  )) +
+  scale_y_continuous(labels = scales::comma_format(big.mark = ".")) +
+  labs(x = NULL, y = "Zulassungen LKW (> 3.5 t)", fill = NULL) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "bottom")
+
+plotly::ggplotly(p, width = 500, height= 500) |> #height = 380
+  plotly::layout(legend = list(orientation = "h", x = .15, y = -0.15))
+```
+]
+
+.col-50[
+```{r motivation-strategies, echo=FALSE, message=FALSE, warning=FALSE, out.width="99%"}
+knitr::include_graphics("fig/transporeon_2024_strategies.png")
+```
+`r Cite(bib, "transporeon2024", .opts = list(cite.style = "authoryear"))` 
+]
 
 ---
 class: inverse, center, middle
 
 # Problembeschreibung
+---
+class: center, middle
+## Einordnung Planungsprobleme
+
+.col-50[
+```{r problem-operational, echo=FALSE, message=FALSE, warning=FALSE, out.width="99%"}
+knitr::include_graphics("fig/planning_scheme_operational.png")
+```
+]
+--
+.col-50[
+```{r probloem_planning_scheme, echo=FALSE, message=FALSE, warning=FALSE, out.width="99%"}
+knitr::include_graphics("fig/planning_scheme.png")
+```
+]
 
 ---
 
-## Economics 
+## Literaturüberblick: Taxonomie
 
+```{r lit-taxonomy, echo=FALSE, message=FALSE, warning=FALSE}
+library(kableExtra)
+library(tibble)
 
+# ── Zitationsstrings via RefManageR ──────────────────────────────────────────
+keys <- c("Hoff2010", "Fagerholt2010", "Bakkehaug2014", "Zheng2018",
+          "Sarangi2023", "Truden2026", "Zackrisson2025",
+          "EINRIDE_Fraunhofer_REWE_2025", "Winkelmann2024")
 
+zitate <- sapply(keys, function(k)
+  Cite(bib, k, .opts = list(cite.style = "authoryear")))
+
+# ── Taxonomie-Daten ───────────────────────────────────────────────────────────
+tax <- tribble(
+  ~Quelle,                          ~Problemtyp,                  ~Flottentyp,  ~Ziel,                     ~Zeit,                  ~Stochastizitaet,   ~Modelltyp,              ~Emissionen,
+  zitate["Hoff2010"],               "Composition &amp; Routing",  "heterogen",  "Distanz / op. Kosten",    "einperiodisch",        "deterministisch",  "Review",                "–",
+  zitate["Fagerholt2010"],          "Strategische Planung",       "heterogen",  "op. Kosten",              "mehrperiodisch",       "deterministisch",  "MIP",                   "NB",
+  zitate["Bakkehaug2014"],          "Fleet Renewal",              "heterogen",  "Kosten",                  "finiter Horizont",     "stochastisch",     "Stoch. Programmierung", "–",
+  zitate["Zheng2018"],              "Fleet Replacement",          "homogen",    "op. Kosten",              "mehrperiodisch",       "stochastisch",     "Simulation",            "NB",
+  zitate["Sarangi2023"],            "Sizing &amp; Routing",       "heterogen",  "Kosten + Emissionen",     "einperiodisch",        "deterministisch",  "Review",                "Ziel",
+  zitate["Truden2026"],             "Fleet Transition",           "heterogen",  "TCO",                     "mehrperiodisch (fin.)", "deterministisch",  "MIP",                   "NB",
+  zitate["Zackrisson2025"],         "Fleet Electrification",      "heterogen",  "TCO / LCA",               "einperiodisch",        "deterministisch",  "Simulation / LCA",      "Ziel",
+  zitate["EINRIDE_Fraunhofer_REWE_2025"], "Elektrifizierung",     "heterogen",  "op. Kosten",              "einperiodisch",        "deterministisch",  "Fallstudie",            "NB",
+  zitate["Winkelmann2024"],         "Planning &amp; Routing",     "heterogen",  "TCO + Emissionen",        "einperiodisch",        "deterministisch",  "MIP / Heuristik",       "Ziel"
+)
+
+# ── Spaltenköpfe (mit Zeilenumbruch via <br>) ─────────────────────────────────
+col_names <- c(
+  "Quelle", "Problemtyp", "Flotte",
+  "Opt.-Ziel", "Zeitstruktur",
+  "Stochastizität", "Modelltyp", "Emissionen"
+)
+
+# ── Tabelle ───────────────────────────────────────────────────────────────────
+kable(tax,
+      col.names = col_names,
+      format    = "html",
+      escape    = FALSE,
+      align     = c("l","l","c","l","c","c","l","c")) |>
+  kable_styling(
+    bootstrap_options = c("striped", "condensed", "hover"),
+    font_size         = 11,
+    full_width        = TRUE
+  ) |>
+  # Spaltengruppen als Header-Ergänzung
+  add_header_above(
+    c(" " = 2,                    # Quelle + Problemtyp
+      "Flottenmerkmal" = 1,       # Flottentyp
+      "Optimierung" = 2,          # Ziel + Zeit
+      "Unsicherheit" = 1,         # Stochastizität
+      "Methodik" = 1,             # Modelltyp
+      "Nachhaltigkeit" = 1),      # Emissionen
+    bold = TRUE, background = "#EDE7F6"
+  ) |>
+  # FloTUV-Hauptreferenz hervorheben
+  row_spec(9, bold = TRUE, background = "#EDE7F6") |>
+  # Legende unter der Tabelle
+  footnote(
+    general        = "NB = Emissionen als Nebenbedingung; Ziel = Emissionen als Optimierungsziel; – = nicht berücksichtigt.",
+    general_title  = "Anmerkung:",
+    footnote_as_chunk = TRUE
+  )
+```
 ---
 class: compact-slide
 

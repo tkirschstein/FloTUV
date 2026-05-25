@@ -13,6 +13,16 @@
     <script src="talk_kirschstein_files/tiny.toast-1.0.0/toast.min.js"></script>
     <link href="talk_kirschstein_files/xaringanExtra-broadcast-0.2.6/broadcast.css" rel="stylesheet" />
     <script src="talk_kirschstein_files/xaringanExtra-broadcast-0.2.6/broadcast.js"></script>
+    <script src="talk_kirschstein_files/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+    <script src="talk_kirschstein_files/plotly-binding-4.12.0/plotly.js"></script>
+    <script src="talk_kirschstein_files/typedarray-0.1/typedarray.min.js"></script>
+    <script src="talk_kirschstein_files/jquery-3.5.1/jquery.min.js"></script>
+    <link href="talk_kirschstein_files/crosstalk-1.2.2/css/crosstalk.min.css" rel="stylesheet" />
+    <script src="talk_kirschstein_files/crosstalk-1.2.2/js/crosstalk.min.js"></script>
+    <link href="talk_kirschstein_files/plotly-htmlwidgets-css-2.25.2/plotly-htmlwidgets.css" rel="stylesheet" />
+    <script src="talk_kirschstein_files/plotly-main-2.25.2/plotly-latest.min.js"></script>
+    <script src="talk_kirschstein_files/kePrint-0.0.1/kePrint.js"></script>
+    <link href="talk_kirschstein_files/lightable-0.0.1/lightable.css" rel="stylesheet" />
     <link rel="stylesheet" href="talk_xaringan.css" type="text/css" />
   </head>
   <body>
@@ -101,24 +111,197 @@ class: inverse, center, middle
 
 ---
 
-## Motivation
+## Emissionssensitivität Beispiel
+
+&lt;img src="fig/rewe.png" alt="" width="90%" style="display: block; margin: auto;" /&gt;
+
+---
+## Emissionssensitivität allgemein
+
+.col-50[
+&lt;img src="fig/transporeon_2024_CO2sensitive.png" alt="" width="99%" style="display: block; margin: auto;" /&gt;
+
+(Lehmacher and Lind, 2024) 
+]
+--
+.col-50[
+&lt;img src="fig/transporeon_2022_Wtp.png" alt="" width="90%" style="display: block; margin: auto;" /&gt;
+(Jameson, Schack, Egloff et al., 2023) 
+]
+
+---
+## Emission awareness
+
+.col-50[
+&lt;img src="fig/transporeon_2022_emis_account.png" alt="" width="99%" style="display: block; margin: auto;" /&gt;
+
+(Transporeon, 2022) 
+]
+--
+.col-50[
+&lt;img src="fig/transporeon_2024_technologies.png" alt="" width="99%" style="display: block; margin: auto;" /&gt;
+(Lehmacher and Lind, 2024) 
+]
+
 
 ---
 
-## Motivation - 2
+## Motivation - Zulassungen von zero-emission vehicles (ZEV)
 
+&lt;img src="fig/sales_shares_zev.png" alt="" width="90%" style="display: block; margin: auto;" /&gt;
+
+(Mulholland and Benoit, 2026) 
+
+---
+
+## Motivation - Zulassung von ZEV-LKW in Deutschland
+
+.col-50[
+<div id="htmlwidget-060a151944f8f5c162a0" style="width:500px;height:500px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-060a151944f8f5c162a0">{"x":{"data":[{"orientation":"v","width":[0.89999999999999991,0.90000000000000013,0.90000000000000036,0.90000000000000036],"base":[20674,24538,19728,35242],"x":[1,2,3,4],"y":[0,1,1,2],"text":["Jahr: 2022<br />Anzahl:     0<br />Technologie: H2","Jahr: 2023<br />Anzahl:     1<br />Technologie: H2","Jahr: 2024<br />Anzahl:     1<br />Technologie: H2","Jahr: 2025<br />Anzahl:     2<br />Technologie: H2"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(240,128,128,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"name":"H2","legendgroup":"H2","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.89999999999999991,0.90000000000000013,0.90000000000000036,0.90000000000000036],"base":[18429,21947,17384,33573],"x":[1,2,3,4],"y":[2245,2591,2344,1669],"text":["Jahr: 2022<br />Anzahl:  2245<br />Technologie: LNG","Jahr: 2023<br />Anzahl:  2591<br />Technologie: LNG","Jahr: 2024<br />Anzahl:  2344<br />Technologie: LNG","Jahr: 2025<br />Anzahl:  1669<br />Technologie: LNG"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(54,30,71,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"name":"LNG","legendgroup":"LNG","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.89999999999999991,0.90000000000000013,0.90000000000000036,0.90000000000000036],"base":[18352,21916,17107,27382],"x":[1,2,3,4],"y":[77,31,277,6191],"text":["Jahr: 2022<br />Anzahl:    77<br />Technologie: PHEV","Jahr: 2023<br />Anzahl:    31<br />Technologie: PHEV","Jahr: 2024<br />Anzahl:   277<br />Technologie: PHEV","Jahr: 2025<br />Anzahl:  6191<br />Technologie: PHEV"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(224,5,20,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"name":"PHEV","legendgroup":"PHEV","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.89999999999999991,0.90000000000000013,0.90000000000000036,0.90000000000000036],"base":[18322,21790,17007,27275],"x":[1,2,3,4],"y":[30,126,100,107],"text":["Jahr: 2022<br />Anzahl:    30<br />Technologie: FC","Jahr: 2023<br />Anzahl:   126<br />Technologie: FC","Jahr: 2024<br />Anzahl:   100<br />Technologie: FC","Jahr: 2025<br />Anzahl:   107<br />Technologie: FC"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(155,127,238,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"name":"FC","legendgroup":"FC","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.89999999999999991,0.90000000000000013,0.90000000000000036,0.90000000000000036],"base":[0,0,0,0],"x":[1,2,3,4],"y":[18322,21790,17007,27275],"text":["Jahr: 2022<br />Anzahl: 18322<br />Technologie: BEV","Jahr: 2023<br />Anzahl: 21790<br />Technologie: BEV","Jahr: 2024<br />Anzahl: 17007<br />Technologie: BEV","Jahr: 2025<br />Anzahl: 27275<br />Technologie: BEV"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(94,62,225,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"name":"BEV","legendgroup":"BEV","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":24.634288086342885,"r":8.6342880863428846,"b":26.766293067662936,"l":71.664591116645923},"paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":17.268576172685769},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.40000000000000002,4.5999999999999996],"tickmode":"array","ticktext":["2022","2023","2024","2025"],"tickvals":[1,2,3,4],"categoryorder":"array","categoryarray":["2022","2023","2024","2025"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":4.3171440431714423,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":13.814860938148611},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.78493528057662576,"zeroline":false,"anchor":"y","title":{"text":"","font":{"color":"rgba(0,0,0,1)","family":"","size":17.268576172685769}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-1762.2,37006.199999999997],"tickmode":"array","ticktext":["0","10.000","20.000","30.000"],"tickvals":[0,10000,20000,30000],"categoryorder":"array","categoryarray":["0","10.000","20.000","30.000"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":4.3171440431714423,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":13.814860938148611},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.78493528057662576,"zeroline":false,"anchor":"x","title":{"text":"Zulassungen LKW (> 3.5 t)","font":{"color":"rgba(0,0,0,1)","family":"","size":17.268576172685769}},"hoverformat":".2f"},"shapes":[],"showlegend":true,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":13.814860938148611},"orientation":"h","x":0.14999999999999999,"y":-0.14999999999999999,"xanchor":"center","yanchor":"top","title":{"text":"","font":{"color":"rgba(0,0,0,1)","family":"","size":17.268576172685769}}},"hovermode":"closest","width":500,"height":500,"barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"73f01d137d9":{"x":{},"y":{},"fill":{},"type":"bar"}},"cur_data":"73f01d137d9","visdat":{"73f01d137d9":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+]
+
+.col-50[
+&lt;img src="fig/transporeon_2024_strategies.png" alt="" width="99%" style="display: block; margin: auto;" /&gt;
+(Lehmacher and Lind, 2024) 
+]
 
 ---
 class: inverse, center, middle
 
 # Problembeschreibung
+---
+class: center, middle
+## Einordnung Planungsprobleme
+
+.col-50[
+&lt;img src="fig/planning_scheme_operational.png" alt="" width="99%" style="display: block; margin: auto;" /&gt;
+]
+--
+.col-50[
+&lt;img src="fig/planning_scheme.png" alt="" width="99%" style="display: block; margin: auto;" /&gt;
+]
 
 ---
 
-## Economics 
+## Literaturüberblick: Taxonomie
 
-
-
+&lt;table class="table table-striped table-condensed table-hover" style="font-size: 11px; margin-left: auto; margin-right: auto;border-bottom: 0;"&gt;
+ &lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="empty-cells: hide;border-bottom:hidden;" colspan="2"&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; font-weight: bold; padding-right: 4px; padding-left: 4px; background-color: rgba(237, 231, 246, 255) !important;" colspan="1"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; "&gt;Flottenmerkmal&lt;/div&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; font-weight: bold; padding-right: 4px; padding-left: 4px; background-color: rgba(237, 231, 246, 255) !important;" colspan="2"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; "&gt;Optimierung&lt;/div&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; font-weight: bold; padding-right: 4px; padding-left: 4px; background-color: rgba(237, 231, 246, 255) !important;" colspan="1"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; "&gt;Unsicherheit&lt;/div&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; font-weight: bold; padding-right: 4px; padding-left: 4px; background-color: rgba(237, 231, 246, 255) !important;" colspan="1"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; "&gt;Methodik&lt;/div&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; font-weight: bold; padding-right: 4px; padding-left: 4px; background-color: rgba(237, 231, 246, 255) !important;" colspan="1"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; "&gt;Nachhaltigkeit&lt;/div&gt;&lt;/th&gt;
+&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Quelle &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Problemtyp &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Flotte &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Opt.-Ziel &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Zeitstruktur &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Stochastizität &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Modelltyp &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Emissionen &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; (Hoff, Andersson, Christiansen et al., 2010) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Composition &amp;amp; Routing &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; heterogen &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Distanz / op. Kosten &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; einperiodisch &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; deterministisch &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Review &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; – &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; (Fagerholt, Christiansen, Hvattum et al., 2010) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Strategische Planung &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; heterogen &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; op. Kosten &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; mehrperiodisch &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; deterministisch &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; MIP &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; NB &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; (Bakkehaug, Eidem, Fagerholt et al., 2014) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Fleet Renewal &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; heterogen &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Kosten &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; finiter Horizont &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; stochastisch &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Stoch. Programmierung &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; – &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; (Zheng, Chen, and Jiang, 2018) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Fleet Replacement &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; homogen &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; op. Kosten &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; mehrperiodisch &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; stochastisch &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Simulation &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; NB &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; (Sarangi, Chakraborty, and Bahinipati, 2023) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Sizing &amp;amp; Routing &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; heterogen &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Kosten + Emissionen &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; einperiodisch &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; deterministisch &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Review &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; Ziel &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; (Truden and Hewitt, 2026) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Fleet Transition &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; heterogen &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; TCO &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; mehrperiodisch (fin.) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; deterministisch &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; MIP &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; NB &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; (Zackrisson, ngholm, and Tang, 2025) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Fleet Electrification &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; heterogen &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; TCO / LCA &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; einperiodisch &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; deterministisch &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Simulation / LCA &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; Ziel &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; (Engholm, Zackrisson, Bengtsson et al., 2025) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Elektrifizierung &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; heterogen &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; op. Kosten &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; einperiodisch &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; deterministisch &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Fallstudie &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; NB &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;background-color: rgba(237, 231, 246, 255) !important;"&gt; (Winkelmann, Spinter, and Neukirchen, 2024) &lt;/td&gt;
+   &lt;td style="text-align:left;font-weight: bold;background-color: rgba(237, 231, 246, 255) !important;"&gt; Planning &amp;amp; Routing &lt;/td&gt;
+   &lt;td style="text-align:center;font-weight: bold;background-color: rgba(237, 231, 246, 255) !important;"&gt; heterogen &lt;/td&gt;
+   &lt;td style="text-align:left;font-weight: bold;background-color: rgba(237, 231, 246, 255) !important;"&gt; TCO + Emissionen &lt;/td&gt;
+   &lt;td style="text-align:center;font-weight: bold;background-color: rgba(237, 231, 246, 255) !important;"&gt; einperiodisch &lt;/td&gt;
+   &lt;td style="text-align:center;font-weight: bold;background-color: rgba(237, 231, 246, 255) !important;"&gt; deterministisch &lt;/td&gt;
+   &lt;td style="text-align:left;font-weight: bold;background-color: rgba(237, 231, 246, 255) !important;"&gt; MIP / Heuristik &lt;/td&gt;
+   &lt;td style="text-align:center;font-weight: bold;background-color: rgba(237, 231, 246, 255) !important;"&gt; Ziel &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tfoot&gt;&lt;tr&gt;&lt;td style="padding: 0; " colspan="100%"&gt;
+&lt;span style="font-style: italic;"&gt;Anmerkung:&lt;/span&gt; &lt;sup&gt;&lt;/sup&gt; NB = Emissionen als Nebenbedingung; Ziel = Emissionen als Optimierungsziel; – = nicht berücksichtigt.&lt;/td&gt;&lt;/tr&gt;&lt;/tfoot&gt;
+&lt;/table&gt;
 ---
 class: compact-slide
 
@@ -135,7 +318,66 @@ class: small-slide
 ## References
 
 .small[
-NULL
+Bakkehaug, R., E. S. Eidem, K. Fagerholt, et al. (2014). "A stochastic
+programming formulation for strategic fleet renewal in shipping". In:
+_Transportation Research Part E: Logistics and Transportation Review_
+72, pp. 60-76. DOI:
+[10.1016/j.tre.2014.09.010](https://doi.org/10.1016%2Fj.tre.2014.09.010).
+
+Engholm, A., A. Zackrisson, T. Bengtsson, et al. (2025). _Beyond
+Replacing Diesel Trucks: How Optimised Fleet Planning Increases
+Electrification and Lowers Transportation Costs_. Fallstudie auf Basis
+von 38.000 Sendungen; präsentiert am 13. Juni 2025. Fraunhofer
+Institute for Systems and Innovation Research ISI.
+
+Fagerholt, K., M. Christiansen, L. M. Hvattum, et al. (2010). "A
+decision support methodology for strategic planning in maritime
+transportation". In: _Omega_ 38.6, pp. 465-474. DOI:
+[10.1016/j.omega.2009.12.003](https://doi.org/10.1016%2Fj.omega.2009.12.003).
+
+Hoff, A., H. Andersson, M. Christiansen, et al. (2010). "Industrial
+aspects and literature survey: Fleet composition and routing". In:
+_Computers &amp; Operations Research_ 37.12, pp. 2041-2061. DOI:
+[10.1016/j.cor.2010.03.015](https://doi.org/10.1016%2Fj.cor.2010.03.015).
+
+Jameson, P., L. Schack, C. Egloff, et al. (2023). _Customers’
+Willingness to Pay Can Turn the Tide Toward Decarbonized Shipping_.
+Boston Consulting Group.
+
+Lehmacher, W. and M. Lind (2024). _The 2024 Green Freight Report_.
+Transporeon.
+
+Mulholland, E. and M. Benoit (2026). _European heavy-duty vehicle
+market development quarterly (January-December 2025)_. The
+International Council on Clean Transportation (ICCT).
+
+Sarangi, B. K., A. Chakraborty, and C. S. Bahinipati (2023).
+"Multi-objective fleet sizing and routing for sustainable urban
+freight: a review". In: _Sustainable Cities and Society_. Dateiname:
+Sarangi2023.pdf.
+
+Transporeon (2022). _Dekarbonisierung des Güterverkehrs 2022 - Wo
+Verlader und Spediteure auf dem Weg zu „Net Zero“ stehen_. Transporeon.
+
+Truden, C. and M. Hewitt (2026). "Multi-objective, multi-attribute
+fleet sizing in a dynamic and stochastic environment: A data-driven
+approach". In: _Transportation Research Part E: Logistics and
+Transportation Review_ 207.
+
+Winkelmann, J., S. Spinter, and T. Neukirchen (2024). "Green transport
+fleet renewal using approximate dynamic programming: A case study in
+German heavy-duty road transportation". In: _Transportation Research
+Part E: Logistics and Transportation Review_ 186.
+
+Zackrisson, M., A. ngholm, and O. Tang (2025). "Data-driven analysis of
+strategic–operational interfaces in freight electrification under deep
+uncertainty". In: _Transportation Research Part D: Transport and
+Environment_ 135.
+
+Zheng, R., S. Chen, and Y. Jiang (2018). "Fleet replacement decisions
+under demand and fuel price uncertainty". In: _Transportation Research
+Part D: Transport and Environment_. Simulation-based Optimization für
+stochastischen Flottenersatz; Dateiname: Zheng2018pdf.pdf.
 ]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
