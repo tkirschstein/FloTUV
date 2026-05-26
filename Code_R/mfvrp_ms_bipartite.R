@@ -12,33 +12,25 @@
 #   - MFVRP-MS maximiert die mittlere Kundenzufriedenheit
 # =============================================================================
 
-library(tidyverse)
-library(ompr)
-library(ompr.roi)
-library(ROI.plugin.glpk)
 
 set.seed(4721)
-
 
 # ---- 1. Fahrzeugparameter ---------------------------------------------------
 # Quellen für Richtwerte: Syré et al. (2025), Icha & Lauf (2025)
 # Emissionen als Well-to-Wheel (WTW) CO2-Äquivalente
-veh <- list(
+veh.data <- list(
   type  = c("c-truck", "e-truck"),
   c_fix = c(314,  375),   # Fixkosten je Tour-Einsatz [€/Tour]
   c_var = c(0.57, 0.75),  # Variable Kosten [€/km]
   e_fix = c(  0,    0),   # Fixemissionen je Tour [kg CO2e] (hier 0)
-  e_var = c(1.07, 0.44),  # Variable Emissionen [kg CO2e/km]
-  v_max = c(6, 6)         # Maximale Fahrzeugeanzahl je Typ
+  e_var = c(1.07, 0.44)  # Variable Emissionen [kg CO2e/km]
 )
-n_types <- 2
-
+n <- 50
 
 # ---- 2. Kundeninstanz generieren --------------------------------------------
-n <- 12   # Anzahl Kunden — muss gerade sein (Dual-Load-Bedingung)
 stopifnot(n %% 2 == 0)
 
-customers <- tibble(
+cust.mat <- tibble(
   id   = 1:n,
   x    = runif(n, 0, 100),
   y    = runif(n, 0, 100),
@@ -51,187 +43,178 @@ depot <- c(x = 50, y = 50)
 
 cat(sprintf(
   "Instanz: %d Kunden  | %d kostensensitiv, %d emissionssensitiv\n",
-  n, sum(customers$pref == 0), sum(customers$pref == 1)
+  n, sum(cust.mat$pref == 0), sum(cust.mat$pref == 1)
 ))
 
 
-# ---- 3. Tourlängenmatrix ----------------------------------------------------
-# Tourlänge = Depot → Kunde i → Kunde j → Depot  [km]
-d2 <- function(x1, y1, x2, y2) sqrt((x1 - x2)^2 + (y1 - y2)^2)
 
-customers <- customers |>
-  mutate(d_depot = d2(x, y, depot["x"], depot["y"]))
-
-# create data frame of all pairs of customers
-pairs <- tidyr::crossing(
-  customers |> select(id, x, y, d_depot) |> rename(i = id, xi = x, yi = y, d_depot_i = d_depot),
-  customers |> select(id, x, y, d_depot) |> rename(j = id, xj = x, yj = y, d_depot_j = d_depot)
+instance.solve <- function(veh = veh.data, customers = cust.mat , veh.cap = c(n/2,n/2)){
+  library(tidyverse)
+  library(ggplot2)
+  library(ompr)
+  library(ompr.roi)
+  library(ROI.plugin.glpk)
+  library(ROI.plugin.highs)
+  library(Matrix)
+  
+  # Sub functions ####################################################
+  
+  build_model <- function(data= assign_mat, cap = rep(ncol(assign_mat)/2,2), veh.vec = pairs$type, data.obj = pairs, obj ="tc", sense = "min") {
+    
+    nT <- nrow(data)
+    nC <- ncol(data)
+    
+    obj.vec <- as.numeric(unlist(data.obj[, obj]))
+    
+    c.truck.id <- which(veh.vec == "c-truck")
+    e.truck.id <- which(veh.vec == "e-truck")
+    
+    MIPModel() |>
+      add_variable(
+        y[i], i = 1:nT, type = "binary"
+      ) |>
+      # (a) Jeder Kunde genau einmal
+      add_constraint(
+        sum_over(y[i] * data[i,j], i = 1:nT) == 1,
+        j = 1:nC
+      ) |>
+      # (c) Flottenkapazität C-truck
+      add_constraint(
+        sum_over(y[i], i = c.truck.id) <= cap[1]
+      ) |>
+      # (c) Flottenkapazität E-truck
+      add_constraint(
+        sum_over(y[i], i = e.truck.id) <= cap[2]
+      ) |>
+      set_objective(
+        sum_over(y[i] * obj.vec[i], i = 1:nT),
+        sense = sense
+      )
+  }
+  
+  
+  solve_mfvrp <- function(obj.var, sense, cap.vec = c(n/2,n/2) ) {
+    res <- solve_model(
+      build_model(obj = obj.var, sense = sense, cap = cap.vec),
+      with_ROI(solver = "highs", verbose = TRUE)
+    )
+    asgn <- get_solution(res, y[i]) |>
+      filter(value > 0.5) |>
+      select(i)
+    list(result = res, tours = asgn)
+  }
+  
+  # Tourlänge = Depot → Kunde i → Kunde j → Depot  [km]
+  d2 <- function(x1, y1, x2, y2) sqrt((x1 - x2)^2 + (y1 - y2)^2)
+  
+  
+  
+  # ---- 3. Tourlängenmatrix ----------------------------------------------------
+  n = nrow(customers)
+  
+  customers <- customers |>
+    mutate(d_depot = d2(x, y, depot["x"], depot["y"]))
+  
+  # create data frame of all pairs of customers
+  idx <- combn(customers$id, 2)
+  pairs <- tibble(i = idx[1,], j = idx[2,]) |>
+    left_join(customers |> select(id, xi = x, yi = y, d_depot_i = d_depot), by = c("i" = "id")) |>
+    left_join(customers |> select(id, xj = x, yj = y, d_depot_j = d_depot), by = c("j" = "id"))
+  
+  # add tour length to pairs
+  pairs <- pairs |>
+    mutate(tl = d_depot_i + d2(xi, yi, xj, yj) + d_depot_j)
+  
+  # add preference of customers i and j as variables pref_i and pref_j to pairs 
+  pairs <- pairs |>
+    left_join(customers |> select(id, pref) |> rename(i = id, pref_i = pref), by = "i") |>
+    left_join(customers |> select(id, pref) |> rename(j = id, pref_j = pref), by = "j")
+  
+  
+  # add to pairs total cost, total emissions as well as allocated cost and emissions for i and j
+  veh_tbl <- tibble(
+    t     = seq_len(n_types),
+    type  = veh$type,
+    c_fix = veh$c_fix,
+    c_var = veh$c_var,
+    e_fix = veh$e_fix,
+    e_var = veh$e_var
+  )
+  
+  pairs <- pairs |>
+    tidyr::crossing(veh_tbl) |>
+    mutate(
+      tc   = c_fix + c_var * tl,   # total cost  [€]
+      te   = e_fix + e_var * tl,   # total emissions  [kg CO2e]
+      ac_i = tc * d_depot_i /(d_depot_i+d_depot_j),               # allocated cost for i  (EN 16258, equal load)
+      ae_i = te * d_depot_i /(d_depot_i+d_depot_j),               # allocated emissions for i
+      ac_j = tc * d_depot_j /(d_depot_i+d_depot_j),               # allocated cost for j
+      ae_j = te * d_depot_j /(d_depot_i+d_depot_j)                # allocated emissions for j
+    )
+  
+  # ---- 5. Zufriedenheitsschranken pro Kunde -----------------------------------
+  # Für jeden Kunden: bestes und schlechtestes mögliches Ergebnis
+  # über alle Tourpartner und Fahrzeugtypen
+  
+  # Schranken für Kunden (Minimum/Maximum über Dimension und Typen)
+ bounds_tbl <- bind_rows(
+  pairs |> select(cust = i, ac = ac_i, ae = ae_i),
+  pairs |> select(cust = j, ac = ac_j, ae = ae_j)
 ) |>
-  filter(i < j)
-
-# add tour length to pairs
-pairs <- pairs |>
-  mutate(tl = d_depot_i + d2(xi, yi, xj, yj) + d_depot_j)
-
-# add preference of customers i and j as variables pref_i and pref_j to pairs 
-pairs <- pairs |>
-  left_join(customers |> select(id, pref) |> rename(i = id, pref_i = pref), by = "i") |>
-  left_join(customers |> select(id, pref) |> rename(j = id, pref_j = pref), by = "j")
-
-
-# add to pairs total cost, total emissions as well as allocated cost and emissions for i and j
-veh_tbl <- tibble(
-  t     = seq_len(n_types),
-  type  = veh$type,
-  c_fix = veh$c_fix,
-  c_var = veh$c_var,
-  e_fix = veh$e_fix,
-  e_var = veh$e_var
+  summarise(c_lo = min(ac), c_hi = max(ac),
+            e_lo = min(ae), e_hi = max(ae),
+            .by = cust)
+  
+  # calculate and add customer satisfaction
+  
+  pairs <- pairs |>
+  left_join(bounds_tbl |> rename(i = cust, c_lo_i = c_lo, c_hi_i = c_hi,
+                                           e_lo_i = e_lo, e_hi_i = e_hi), by = "i") |>
+  left_join(bounds_tbl |> rename(j = cust, c_lo_j = c_lo, c_hi_j = c_hi,
+                                           e_lo_j = e_lo, e_hi_j = e_hi), by = "j") |>
+  mutate(
+    os_i = (1 - pref_i) * if_else(c_hi_i > c_lo_i, (c_hi_i - ac_i)/(c_hi_i - c_lo_i), 1) +
+             pref_i      * if_else(e_hi_i > e_lo_i, (e_hi_i - ae_i)/(e_hi_i - e_lo_i), 1),
+    os_j = (1 - pref_j) * if_else(c_hi_j > c_lo_j, (c_hi_j - ac_j)/(c_hi_j - c_lo_j), 1) +
+             pref_j      * if_else(e_hi_j > e_lo_j, (e_hi_j - ae_j)/(e_hi_j - e_lo_j), 1),
+    os = os_i + os_j
+  )
+  
+  # Zuordnungsmatrix: Zeilen = Touren (Pairs), Spalten = Kunden
+  # Eintrag [r, k] = 1, wenn Kunde k in Tour r enthalten ist (k == i oder k == j)
+  
+  n_pairs <- nrow(pairs)
+  row_idx <- c(seq_len(n_pairs), seq_len(n_pairs))
+  col_idx <- c(pairs$i, pairs$j)
+  assign_mat <- sparseMatrix(i = row_idx, j = col_idx,
+                             x = 1L,
+                             dims = c(n_pairs, n))
+  
+  # ---- 7. Optimierungs-Modell bauen und lösen ----------------------------------
+  
+  sol_os <- solve_mfvrp(obj.var = "os", sense = "max", cap.vec = veh.cap) # satisfaction optimal
+  sol_tc <- solve_mfvrp(obj.var = "tc", sense = "min", cap.vec = veh.cap) # cost-optimal
+  sol_te <- solve_mfvrp(obj.var = "te", sense = "min", cap.vec = veh.cap) # emission-optimal
+  
+return(
+  list(
+    sol.list = list(
+      os = sol_os, 
+      tc = sol_tc,
+      te = sol_te),
+    instance = list(
+      veh.cap = veh.cap,
+      customers = customers,
+      veh.data = veh,
+      tours= pairs,
+      assign.mat = assign_mat ) 
+    )
 )
 
-pairs <- pairs |>
-  tidyr::crossing(veh_tbl) |>
-  mutate(
-    tc   = c_fix + c_var * tl,   # total cost  [€]
-    te   = e_fix + e_var * tl,   # total emissions  [kg CO2e]
-    ac_i = tc * d_depot_i /(d_depot_i+d_depot_j),               # allocated cost for i  (EN 16258, equal load)
-    ae_i = te * d_depot_i /(d_depot_i+d_depot_j),               # allocated emissions for i
-    ac_j = tc * d_depot_j /(d_depot_i+d_depot_j),               # allocated cost for j
-    ae_j = te * d_depot_j /(d_depot_i+d_depot_j)                # allocated emissions for j
-  )
-
-# ---- 5. Zufriedenheitsschranken pro Kunde -----------------------------------
-# Für jeden Kunden: bestes und schlechtestes mögliches Ergebnis
-# über alle Tourpartner und Fahrzeugtypen
-
-# Schranken für Kunden (Minimum/Maximum über Dimension und Typen)
-bounds <- map(customers$id, function(ii) list(
-  c_lo = min(pairs[pairs$i == ii, "ac_i" ], pairs[pairs$j == ii, "ac_j" ]), c_hi = max(pairs[pairs$i == ii, "ac_i" ], pairs[pairs$j == ii, "ac_j" ]),
-  e_lo = min(pairs[pairs$i == ii, "ae_i" ], pairs[pairs$j == ii, "ae_j" ]), e_hi = max(pairs[pairs$i == ii, "ae_i" ], pairs[pairs$j == ii, "ae_j" ])
-))
-
-bounds.mat <- as.data.frame(matrix(unlist(bounds), ncol=4, byrow=T))
-colnames(bounds.mat) <- c("c_lo", "c_hi", "e_lo", "e_hi")
-bounds.mat <- rownames_to_column(bounds.mat, var ="id")
-
-# Füge Kundenzufriedenheit hinzu
-# OS_i(tour) = (1-w_i) * (c_hi - c_i)/(c_hi - c_lo)
-#            +    w_i  * (e_hi - e_i)/(e_hi - e_lo)
-# OS(tour)   = OS_i + OS_j  (beide Kunden auf der Tour)
-
-norm_sat <- function(val, lo, hi) {
-  if (hi > lo) (hi - val) / (hi - lo) else 1.0
-}
-  
-sat_mat <- t(sapply(seq_len(nrow(pairs)), function(i) {
-  
-  x <- pairs[i,]
-  # Calculate OS_i for customer i
-  # get lo and hi values from bounds
-  c_lo <- bounds[[x$i]]$c_lo
-  e_lo <- bounds[[x$i]]$e_lo
-  c_hi <- bounds[[x$i]]$c_hi
-  e_hi <- bounds[[x$i]]$e_hi
-  
-  os_i <- (1 - x$pref_i) * norm_sat(val = x$ac_i, lo = c_lo, hi = c_hi) +
-    x$pref_i * norm_sat(val = x$ae_i, lo = e_lo, hi = e_hi)
-  
-  c_lo <- bounds[[x$j]]$c_lo
-  e_lo <- bounds[[x$j]]$e_lo
-  c_hi <- bounds[[x$j]]$c_hi
-  e_hi <- bounds[[x$j]]$e_hi
-  
-  os_j <- (1 - x$pref_j) * norm_sat(val = x$ac_j, lo = c_lo, hi = c_hi) +
-    x$pref_i * norm_sat(val = x$ae_j, lo = e_lo, hi = e_hi)
-  
-  # Calculate OS for the pair
-  os <- os_i + os_j
-  
-  # Return the calculated OS value
-  return(c(os_i, os_j, os))
-}))
-
-colnames(sat_mat) <- c("os_i", "os_j", "os")
-
-# merge sat_mat and pairs
-pairs <- cbind(pairs, sat_mat)
-
-# Zuordnungsmatrix: Zeilen = Touren (Pairs), Spalten = Kunden
-# Eintrag [r, k] = 1, wenn Kunde k in Tour r enthalten ist (k == i oder k == j)
-library(Matrix)
-n_pairs <- nrow(pairs)
-row_idx <- c(seq_len(n_pairs), seq_len(n_pairs))
-col_idx <- c(pairs$i, pairs$j)
-assign_mat <- sparseMatrix(i = row_idx, j = col_idx,
-                           x = 1L,
-                           dims = c(n_pairs, n))
-
-
-# ---- 7. Matching-Modell aufbauen und lösen ----------------------------------
-# Entscheidungsvariablen: x[ii, jj, t] ∈ {0,1}
-#   = 1, wenn Kunde ii ∈ N1 und Kunde jj ∈ N2 auf einer Tour mit Typ t zusammen
-#
-# Constraints:
-#   (a) Jeder N2-Kunde wird genau einmal bedient
-#   (b) Jeder N1-Kunde wird genau einmal bedient
-#   (c) Flottenkapazität je Fahrzeugtyp
-#
-# Ziel MFVRP-MS: Gesamtzufriedenheit maximieren
-#      MFVRP-TC: Gesamtkosten minimieren
-#      MFVRP-TE: Gesamtemissionen minimieren
-
-# Zuordnungsmatrix Tour Kunden
-
-
-build_model <- function(data= assign_mat, cap = rep(ncol(assign_mat)/2,2), veh.vec = pairs$type, data.obj = pairs, obj ="tc", sense = "min") {
-  
-  nT <- nrow(data)
-  nC <- ncol(data)
-  
-  obj.vec <- as.numeric(data.obj[, obj])
-  
-  c.truck.id <- which(veh.vec == "c-truck")
-  e.truck.id <- which(veh.vec == "e-truck")
-  
-  MIPModel() |>
-    add_variable(
-      y[i], i = 1:nT, type = "binary"
-    ) |>
-    # (a) Jeder Kunde genau einmal
-    add_constraint(
-      sum_over(y[i] * data[i,j], i = 1:nT) == 1,
-      j = 1:nC
-    ) |>
-    # (c) Flottenkapazität C-truck
-    add_constraint(
-      sum_over(y[i], i = c.truck.id) <= cap[1]
-    ) |>
-    # (c) Flottenkapazität E-truck
-    add_constraint(
-      sum_over(y[i], i = e.truck.id) <= cap[2]
-    ) |>
-    set_objective(
-      sum_over(y[i] * obj.vec[i], i = 1:nT),
-      sense = sense
-    )
 }
 
 
-solve_mfvrp <- function(obj.var, sense, cap.vec = c(n/2,n/2) ) {
-  res <- solve_model(
-    build_model(obj = obj.var, sense = sense, cap = cap.vec),
-    with_ROI(solver = "glpk", verbose = FALSE)
-  )
-  asgn <- get_solution(res, y[i]) |>
-    filter(value > 0.5) |>
-    select(i)
-  list(result = res, tours = asgn)
-}
-
-sol_os <- solve_mfvrp(obj.var = "os", sense = "max", cap.vec = c(6,3)) # satisfaction optimal
-sol_tc <- solve_mfvrp(obj.var = "tc", sense = "min", cap.vec = c(6,3)) # cost-optimal
-sol_te <- solve_mfvrp(obj.var = "te", sense = "min", cap.vec = c(6,3)) # emission-optimal
-
+n.50 <- instance.solve()
 
 # ---- 8. Vergleichsmetriken --------------------------------------------------
 evaluate <- function(sol) {
@@ -318,8 +301,8 @@ plot_solution <- function(sol) {
 
 
 
-p1 <- plot_solution(sol_os)
-p2 <- plot_solution(sol_tc)
+p1 <- plot_solution(n.50$sol.list$os)
+p2 <- plot_solution(n.50$sol.list$tc)
 p3 <- plot_solution(sol_te)
 
 p1 / p2 / p3
