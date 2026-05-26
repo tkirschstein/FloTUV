@@ -73,6 +73,12 @@ pairs <- tidyr::crossing(
 pairs <- pairs |>
   mutate(tl = d_depot_i + d2(xi, yi, xj, yj) + d_depot_j)
 
+# add preference of customers i and j as variables pref_i and pref_j to pairs 
+pairs <- pairs |>
+  left_join(customers |> select(id, pref) |> rename(i = id, pref_i = pref), by = "i") |>
+  left_join(customers |> select(id, pref) |> rename(j = id, pref_j = pref), by = "j")
+
+
 # add to pairs total cost, total emissions as well as allocated cost and emissions for i and j
 veh_tbl <- tibble(
   t     = seq_len(n_types),
@@ -98,20 +104,17 @@ pairs <- pairs |>
 # Für jeden Kunden: bestes und schlechtestes mögliches Ergebnis
 # über alle Tourpartner und Fahrzeugtypen
 
-# Schranken für N1-Kunden (Minimum/Maximum über N2-Dimension und Typen)
-bounds_N1 <- map(seq_len(n1), function(ii) list(
-  c_lo = min(AC[ii, , ]), c_hi = max(AC[ii, , ]),
-  e_lo = min(AE[ii, , ]), e_hi = max(AE[ii, , ])
+# Schranken für Kunden (Minimum/Maximum über Dimension und Typen)
+bounds <- map(customers$id, function(ii) list(
+  c_lo = min(pairs[pairs$i == ii, "ac_i" ], pairs[pairs$j == ii, "ac_j" ]), c_hi = max(pairs[pairs$i == ii, "ac_i" ], pairs[pairs$j == ii, "ac_j" ]),
+  e_lo = min(pairs[pairs$i == ii, "ae_i" ], pairs[pairs$j == ii, "ae_j" ]), e_hi = max(pairs[pairs$i == ii, "ae_i" ], pairs[pairs$j == ii, "ae_j" ])
 ))
 
-# Schranken für N2-Kunden (Minimum/Maximum über N1-Dimension und Typen)
-bounds_N2 <- map(seq_len(n2), function(jj) list(
-  c_lo = min(AC[, jj, ]), c_hi = max(AC[, jj, ]),
-  e_lo = min(AE[, jj, ]), e_hi = max(AE[, jj, ])
-))
+bounds.mat <- as.data.frame(matrix(unlist(bounds), ncol=4, byrow=T))
+colnames(bounds.mat) <- c("c_lo", "c_hi", "e_lo", "e_hi")
+bounds.mat <- rownames_to_column(bounds.mat, var ="id")
 
-
-# ---- 6. OS-Matrix: kombinierte Kundenzufriedenheit [n1 × n2 × n_types] -----
+# Füge Kundenzufriedenheit hinzu
 # OS_i(tour) = (1-w_i) * (c_hi - c_i)/(c_hi - c_lo)
 #            +    w_i  * (e_hi - e_i)/(e_hi - e_lo)
 # OS(tour)   = OS_i + OS_j  (beide Kunden auf der Tour)
@@ -119,24 +122,49 @@ bounds_N2 <- map(seq_len(n2), function(jj) list(
 norm_sat <- function(val, lo, hi) {
   if (hi > lo) (hi - val) / (hi - lo) else 1.0
 }
+  
+sat_mat <- t(sapply(seq_len(nrow(pairs)), function(i) {
+  
+  x <- pairs[i,]
+  # Calculate OS_i for customer i
+  # get lo and hi values from bounds
+  c_lo <- bounds[[x$i]]$c_lo
+  e_lo <- bounds[[x$i]]$e_lo
+  c_hi <- bounds[[x$i]]$c_hi
+  e_hi <- bounds[[x$i]]$e_hi
+  
+  os_i <- (1 - x$pref_i) * norm_sat(val = x$ac_i, lo = c_lo, hi = c_hi) +
+    x$pref_i * norm_sat(val = x$ae_i, lo = e_lo, hi = e_hi)
+  
+  c_lo <- bounds[[x$j]]$c_lo
+  e_lo <- bounds[[x$j]]$e_lo
+  c_hi <- bounds[[x$j]]$c_hi
+  e_hi <- bounds[[x$j]]$e_hi
+  
+  os_j <- (1 - x$pref_j) * norm_sat(val = x$ac_j, lo = c_lo, hi = c_hi) +
+    x$pref_i * norm_sat(val = x$ae_j, lo = e_lo, hi = e_hi)
+  
+  # Calculate OS for the pair
+  os <- os_i + os_j
+  
+  # Return the calculated OS value
+  return(c(os_i, os_j, os))
+}))
 
-OS <- array(0, dim = c(n1, n2, n_types))
+colnames(sat_mat) <- c("os_i", "os_j", "os")
 
-for (ii in seq_len(n1)) {
-  w_i <- customers$pref[N1_idx[ii]]
-  b_i <- bounds_N1[[ii]]
-  for (jj in seq_len(n2)) {
-    w_j <- customers$pref[N2_idx[jj]]
-    b_j <- bounds_N2[[jj]]
-    for (t in seq_len(n_types)) {
-      os_i <- (1 - w_i) * norm_sat(AC[ii, jj, t], b_i$c_lo, b_i$c_hi) +
-                   w_i  * norm_sat(AE[ii, jj, t], b_i$e_lo, b_i$e_hi)
-      os_j <- (1 - w_j) * norm_sat(AC[ii, jj, t], b_j$c_lo, b_j$c_hi) +
-                   w_j  * norm_sat(AE[ii, jj, t], b_j$e_lo, b_j$e_hi)
-      OS[ii, jj, t] <- os_i + os_j
-    }
-  }
-}
+# merge sat_mat and pairs
+pairs <- cbind(pairs, sat_mat)
+
+# Zuordnungsmatrix: Zeilen = Touren (Pairs), Spalten = Kunden
+# Eintrag [r, k] = 1, wenn Kunde k in Tour r enthalten ist (k == i oder k == j)
+library(Matrix)
+n_pairs <- nrow(pairs)
+row_idx <- c(seq_len(n_pairs), seq_len(n_pairs))
+col_idx <- c(pairs$i, pairs$j)
+assign_mat <- sparseMatrix(i = row_idx, j = col_idx,
+                           x = 1L,
+                           dims = c(n_pairs, n))
 
 
 # ---- 7. Matching-Modell aufbauen und lösen ----------------------------------
@@ -152,49 +180,57 @@ for (ii in seq_len(n1)) {
 #      MFVRP-TC: Gesamtkosten minimieren
 #      MFVRP-TE: Gesamtemissionen minimieren
 
-build_model <- function(obj_arr, sense) {
+# Zuordnungsmatrix Tour Kunden
+
+
+build_model <- function(data= assign_mat, cap = rep(ncol(assign_mat)/2,2), veh.vec = pairs$type, data.obj = pairs, obj ="tc", sense = "min") {
+  
+  nT <- nrow(data)
+  nC <- ncol(data)
+  
+  obj.vec <- as.numeric(data.obj[, obj])
+  
+  c.truck.id <- which(veh.vec == "c-truck")
+  e.truck.id <- which(veh.vec == "e-truck")
+  
   MIPModel() |>
     add_variable(
-      x[ii, jj, t],
-      ii = 1:n1, jj = 1:n2, t = 1:n_types,
-      type = "binary"
+      y[i], i = 1:nT, type = "binary"
     ) |>
-    # (a) Jeder N2-Kunde genau einmal
+    # (a) Jeder Kunde genau einmal
     add_constraint(
-      sum_over(x[ii, jj, t], ii = 1:n1, t = 1:n_types) == 1,
-      jj = 1:n2
+      sum_over(y[i] * data[i,j], i = 1:nT) == 1,
+      j = 1:nC
     ) |>
-    # (b) Jeder N1-Kunde genau einmal
+    # (c) Flottenkapazität C-truck
     add_constraint(
-      sum_over(x[ii, jj, t], jj = 1:n2, t = 1:n_types) == 1,
-      ii = 1:n1
+      sum_over(y[i], i = c.truck.id) <= cap[1]
     ) |>
-    # (c) Flottenkapazität
+    # (c) Flottenkapazität E-truck
     add_constraint(
-      sum_over(x[ii, jj, t], ii = 1:n1, jj = 1:n2) <= veh$v_max[t],
-      t = 1:n_types
+      sum_over(y[i], i = e.truck.id) <= cap[2]
     ) |>
     set_objective(
-      sum_over(obj_arr[ii, jj, t] * x[ii, jj, t],
-               ii = 1:n1, jj = 1:n2, t = 1:n_types),
+      sum_over(y[i] * obj.vec[i], i = 1:nT),
       sense = sense
     )
 }
 
-solve_mfvrp <- function(obj_arr, sense, label) {
+
+solve_mfvrp <- function(obj.var, sense, cap.vec = c(n/2,n/2) ) {
   res <- solve_model(
-    build_model(obj_arr, sense),
+    build_model(obj = obj.var, sense = sense, cap = cap.vec),
     with_ROI(solver = "glpk", verbose = FALSE)
   )
-  asgn <- get_solution(res, x[ii, jj, t]) |>
+  asgn <- get_solution(res, y[i]) |>
     filter(value > 0.5) |>
-    select(ii, jj, t)
-  list(label = label, result = res, assignments = asgn)
+    select(i)
+  list(result = res, tours = asgn)
 }
 
-sol_ms <- solve_mfvrp(OS, "max", "MFVRP-MS")
-sol_tc <- solve_mfvrp(TC, "min", "MFVRP-TC")
-sol_te <- solve_mfvrp(TE, "min", "MFVRP-TE")
+sol_os <- solve_mfvrp(obj.var = "os", sense = "max", cap.vec = c(6,3)) # satisfaction optimal
+sol_tc <- solve_mfvrp(obj.var = "tc", sense = "min", cap.vec = c(6,3)) # cost-optimal
+sol_te <- solve_mfvrp(obj.var = "te", sense = "min", cap.vec = c(6,3)) # emission-optimal
 
 
 # ---- 8. Vergleichsmetriken --------------------------------------------------
@@ -219,13 +255,13 @@ print(comparison)
 
 # ---- 9. Visualisierung der MFVRP-MS-Lösung ----------------------------------
 plot_solution <- function(sol) {
-  a <- sol$assignments |>
+  a <- sol$tours |>
     mutate(
-      x_i = customers$x[N1_idx[ii]], y_i = customers$y[N1_idx[ii]],
-      x_j = customers$x[N2_idx[jj]], y_j = customers$y[N2_idx[jj]],
-      id_i = N1_idx[ii],
-      id_j = N2_idx[jj],
-      vehicle = factor(veh$type[t], levels = veh$type)
+      x_i = customers$x[pairs[i,"i"]], y_i = customers$y[pairs[i,"i"]],
+      x_j = customers$x[pairs[i,"j"]], y_j = customers$y[pairs[i,"j"]],
+      id_i = pairs[i,"i"],
+      id_j = pairs[i,"j"],
+      vehicle = pairs[i,"type"]
     )
 
   # Routen als Segmente: Depot → i → j → Depot
@@ -237,8 +273,7 @@ plot_solution <- function(sol) {
 
   cust_plot <- customers |>
     mutate(
-      gruppe  = if_else(id %in% N1_idx, "N1", "N2"),
-      praef   = factor(pref, labels = c("kostensensitiv", "emissionssensitiv"))
+      praef   = factor(pref, labels = c("C", "E"))
     )
 
   ggplot() +
@@ -249,36 +284,31 @@ plot_solution <- function(sol) {
     ) +
     geom_point(
       data = cust_plot,
-      aes(x, y, shape = praef, fill = gruppe),
-      size = 4, stroke = 0.6, color = "white"
+      aes(x, y, shape = praef),
+      size = 7, stroke = 0.6, color = "black", fill = "lightgrey"
     ) +
     annotate("point", x = depot["x"], y = depot["y"],
              shape = 22, size = 5, fill = "black", color = "white", stroke = 1) +
     annotate("text",  x = depot["x"], y = depot["y"] - 5,
-             label = "Depot", size = 3, fontface = "bold") +
+             label = "Depot", size = 5, fontface = "bold") +
     geom_text(data = cust_plot, aes(x, y, label = id),
-              color = "black", size = 2.5, fontface = "bold") +
+              color = "black", size = 3.5, fontface = "bold") +
     scale_color_manual(
       values = c("c-truck" = "#D4622A", "e-truck" = "#2B7BB9"),
       name = "Fahrzeugtyp"
     ) +
-    scale_fill_manual(
-      values = c("N1" = "#5B84C4", "N2" = "#E07B5D"),
-      name = "Kundengruppe"
-    ) +
     scale_shape_manual(
-      values = c("kostensensitiv" = 21, "emissionssensitiv" = 24),
-      name = "Kundenpräferenz"
+      values = c("C" = 21, "E" = 24),
+      name = "Präferenz"
     ) +
     guides(fill = guide_legend(override.aes = list(shape = 21, size = 4))) +
     labs(
-      title    = paste0(sol$label, ": Tourenplan"),
-      subtitle = sprintf(
+      title    = sprintf(
         "n = %d Kunden | Ø Zufriedenheit: %.3f | Kosten: %.0f € | Emissionen: %.0f kg CO2e",
         n,
-        sum(map_dbl(seq_len(nrow(a)), \(k) OS[a$ii[k], a$jj[k], a$t[k]])) / n,
-        sum(map_dbl(seq_len(nrow(a)), \(k) TC[a$ii[k], a$jj[k], a$t[k]])),
-        sum(map_dbl(seq_len(nrow(a)), \(k) TE[a$ii[k], a$jj[k], a$t[k]]))
+        sum(map_dbl(seq_len(nrow(a)), \(k) pairs[a$i[k], "os"])) / n,
+        sum(map_dbl(seq_len(nrow(a)), \(k) pairs[a$i[k], "tc"])),
+        sum(map_dbl(seq_len(nrow(a)), \(k) pairs[a$i[k], "te"]))
       ),
       x = "x [km]", y = "y [km]"
     ) +
@@ -286,4 +316,10 @@ plot_solution <- function(sol) {
     theme(legend.position = "right")
 }
 
-plot_solution(sol_ms)
+
+
+p1 <- plot_solution(sol_os)
+p2 <- plot_solution(sol_tc)
+p3 <- plot_solution(sol_te)
+
+p1 / p2 / p3

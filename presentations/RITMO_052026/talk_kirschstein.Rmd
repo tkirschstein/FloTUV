@@ -353,7 +353,7 @@ knitr::include_graphics("fig/transporeon_2024_CO2sensitive.png")
 ]
 --
 .col-50[
-```{r motivation-wtp, echo=FALSE, message=FALSE, warning=FALSE, out.width="90%"}
+```{r motivation-wtp, echo=FALSE, message=FALSE, warning=FALSE, out.width="82%"}
 knitr::include_graphics("fig/transporeon_2022_Wtp.png")
 ```
 `r Cite(bib, "bcg2023", .opts = list(cite.style = "authoryear", max.names = 3, longnamesfirst = FALSE))` 
@@ -381,7 +381,7 @@ knitr::include_graphics("fig/transporeon_2024_technologies.png")
 
 ## Motivation - Zulassungen von zero-emission vehicles (ZEV)
 
-```{r motivation-zev, echo=FALSE, message=FALSE, warning=FALSE, out.width="90%"}
+```{r motivation-zev, echo=FALSE, message=FALSE, warning=FALSE, out.width="88%"}
 knitr::include_graphics("fig/sales_shares_zev.png")
 ```
 
@@ -414,13 +414,13 @@ p <- as.data.frame(zulassung_dtlnd_lwk) |>
   theme_minimal(base_size = 13) +
   theme(legend.position = "bottom")
 
-plotly::ggplotly(p, width = 500, height= 500) |> #height = 380
+plotly::ggplotly(p, width = 500, height= 475) |> #height = 380
   plotly::layout(legend = list(orientation = "h", x = .15, y = -0.15))
 ```
 ]
 
 .col-50[
-```{r motivation-strategies, echo=FALSE, message=FALSE, warning=FALSE, out.width="99%"}
+```{r motivation-strategies, echo=FALSE, message=FALSE, warning=FALSE, out.width="95%"}
 knitr::include_graphics("fig/transporeon_2024_strategies.png")
 ```
 `r Cite(bib, "transporeon2024", .opts = list(cite.style = "authoryear"))` 
@@ -459,10 +459,10 @@ knitr::include_graphics("fig/planning_scheme.png")
   - Flotte: 1 Diesel-LKW, 1 Batterie-LWK
 - ökonomische Annahmen:
   - Ziel Kunden: Entweder Kosten- oder Emissionsminimierer
-  - Ziel Spediteuer: Maximiere Kundenzufriedenheit
   - Allokation: Kosten und Emissionen einer Tour werden nach Direktdistanz zwischen Depot und Kundenort allokiert
 ]
 $\Rightarrow$ Jede Tour hat maximale Länge von 2 Kunden $\rightarrow$ insgesamt 6 Tourenpläne möglich 
+<!-- $\Rightarrow$ mögliche Zielfunktion Spediteur: Maximiere Kundenzufriedenheit $\max \rightarrow \sum_{l \in \mathcal{L}} x_l \cdot  os_{l}$  -->
 ]
 --
 .col-50[
@@ -475,11 +475,11 @@ tab1 <- tribble(
   "Vehicle data",                  "",                "",
   "Net vehicle price",                 "150,000 €",       "300,000 €",
   "Service life (years)",              "9",               "6",
-  "Days of use per year",              "240",             "240",
+  # "Days of use per year",              "240",             "240",
   "Annual mileage (km)",               "120,000",         "90,000",
   "Energy consumption",                "33 l/100km",      "103 kWh/100km",
   "Economic variables",            "",                "",
-  "Interest rate",                     "5%",              "5%",
+  #"Interest rate",                     "5%",              "5%",
   "Energy price",                      "1.50 €/l",        "0.55 €/kWh",
   "Road toll",                         "1.85 €/100km",    "0.00 €/100km",
   "Fixed cost p.a.",               "",                "",
@@ -504,7 +504,7 @@ kable(tab1,
   kable_styling(font_size = 12, full_width = TRUE,
                 bootstrap_options = c("condensed")) |>
   row_spec(0, bold = TRUE) |>
-  row_spec(c(1, 7, 11, 15, 16, 19,20), bold = TRUE, background = "#f0f0f0")
+  row_spec(c(1, 6, 9, 13, 14, 17, 18), bold = TRUE, background = "#f0f0f0")
 ```
 ]
 
@@ -515,14 +515,14 @@ kable(tab1,
 .col-50[
 Gesamtkosten-optimaler Tourenplan
 ```{r beispiel-tour-1, echo=FALSE, message=FALSE, warning=FALSE, out.width="99%",fig.width=8, fig.height=8}
-plot_vrp_ggplot(tour.id = 1, aspect.ratio = 0.9)
+plot_vrp_ggplot(tour.id = 1, aspect.ratio = 0.8)
 ```
 ]
 --
 .col-50[
 Gesamtemissions-optimaler Tourenplan
 ```{r beispiel-tour-2, echo=FALSE, message=FALSE, warning=FALSE, out.width="99%",fig.width=8, fig.height=8}
-plot_vrp_ggplot(tour.id = 6, aspect.ratio = 0.9)
+plot_vrp_ggplot(tour.id = 6, aspect.ratio = .8)
 ```
 ]
 
@@ -532,7 +532,7 @@ plot_vrp_ggplot(tour.id = 6, aspect.ratio = 0.9)
 .col-50[
 Präferenz-optimaler Tourenplan
 ```{r beispiel-tour-3, echo=FALSE, message=FALSE, warning=FALSE, out.width="99%",fig.width=8, fig.height=8}
-plot_vrp_ggplot(tour.id = 3, aspect.ratio = 0.9)
+plot_vrp_ggplot(tour.id = 3, aspect.ratio = 0.8)
 ```
 ]
 --
@@ -687,16 +687,14 @@ class: inverse, center, middle
 
 **Nächste Schritte**
 
-- Formale Modellierung des präferenz-orientierten VRP mit gemischter Flotte
-- Entwicklung exakter und heuristischer Lösungsverfahren
-- Instanzgenerierung auf Basis realistischer Logistikdaten (Projekt: REWE, Einride)
-- Simulationsrahmen für mehrperiodische Flottenübergangsszenarien
-- Validierung und Benchmarking gegen Literaturansätze
-
+- Formale Modellierung des präferenz-orientierten VRP mit gemischter Flotte $\rightarrow$ Präferenzen und Nutzen
+- Modellierungsansatz Flottenplanung $\rightarrow$ dynamische Programmierung vs. rollierendes, mehrperiodiges MILP
+- Sammlung techno-ökonomischer Daten von Antriebssystemen $\rightarrow$ B-LKW, H2-LKW, FC-LKW, Gas-LKW, etc.
+- Instanzgenerierung auf Basis realistischer Logistikdaten 
+- Simulationsrahmen für mehrperiodische Flottenszenarien $\rightarrow$ Einfluss von Infrastruktur und Betriebsmodi
 --
-
 .center[
-<br><br>
+<br>
 **Vielen Dank für Ihre Aufmerksamkeit!**
 
 *Fragen und Anmerkungen sind herzlich willkommen.*
