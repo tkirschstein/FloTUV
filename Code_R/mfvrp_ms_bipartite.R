@@ -30,8 +30,7 @@ veh.data <- list(
   e_fix = c(  0,    0),   # Fixemissionen je Tour [kg CO2e] (hier 0)
   e_var = c(1.07, 0.44)   # Variable Emissionen [kg CO2e/km]
 )
-n_types <- 2
-
+n <- 50
 
 instance.solve <- function(veh = veh.data, customers = cust.mat, depot = depot.coord, veh.cap = c(nrow(customers) / 2, nrow(customers) / 2)) {
 
