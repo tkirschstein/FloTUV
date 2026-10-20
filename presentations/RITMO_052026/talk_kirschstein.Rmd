@@ -18,6 +18,7 @@ output:
       countIncrementalSlides: false
       slideNumberFormat: "%current% / %total%"
     seal: false
+    self_contained: yes
 ---
 
 class: title-slide
@@ -414,8 +415,10 @@ p <- as.data.frame(zulassung_dtlnd_lwk) |>
   theme_minimal(base_size = 13) +
   theme(legend.position = "bottom")
 
-plotly::ggplotly(p, width = 500, height= 475) |> #height = 380
-  plotly::layout(legend = list(orientation = "h", x = .15, y = -0.15))
+p
+
+#plotly::ggplotly(p, width = 500, height= 475) |> #height = 380
+#  plotly::layout(legend = list(orientation = "h", x = .15, y = -0.15))
 ```
 ]
 
